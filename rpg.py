@@ -13,11 +13,12 @@ import itertools
 
 # in progress:
 # TODO: create monsters
+# TODO: create fighting system
 # set global combat = False (make true when in combat)
 
 
 # backlog:
-# TODO: create fighting system
+
 # TODO: save and load game
 # TODO: conversation options for npcs (talk to)
 # TODO: create containers that can hold items
@@ -26,21 +27,26 @@ import itertools
 
 SCREEN_WIDTH = 80
 
+COMBAT = False
+location = "v1"
+showFullExits = True
+combatants = {}
+
 worldRooms = {'v1': {'name': "Main square",
-                      'initial_desc': "initial description of main square",
-                      'desc': "look description of main square. This is more or less the center of the village. This is just some text to test the textwrap functionality for the description of locations. The text cannot be on a second line in the dictionary. I wonder if this will all look rather ok in the command line.",
-                      'ground': ['stone', 'gold'],
-                      'npcs': [],
-                      'monsters': ["orc", "troll"],
-                      'n': "v2"},
+                     'initial_desc': "initial description of main square",
+                     'desc': "look description of main square. This is more or less the center of the village. This is just some text to test the textwrap functionality for the description of locations. The text cannot be on a second line in the dictionary. I wonder if this will all look rather ok in the command line.",
+                     'ground': ['stone', 'gold'],
+                     'npcs': [],
+                     'monsters': ["orc", "troll"],
+                     'n': "v2"},
               'v2': {'name': "Apothecary",
-                      'desc': "Description of the Apothecary",
-                      'ground': [],
-                      'npcs': ['greg'],
-                      'monsters': ["orc", "orc", "troll"],
-                      'shop': ['potion'],
-                      's': "v1"}
-         }
+                     'desc': "Description of the Apothecary",
+                     'ground': [],
+                     'npcs': ['greg'],
+                     'monsters': ["orc", "orc", "troll"],
+                     'shop': ['potion'],
+                     's': "v1"}
+              }
 
 worldItems = {"potion": {'grounddesc': "potion description on the ground",
                          'shortdesc': "potion short description",
@@ -51,96 +57,75 @@ worldItems = {"potion": {'grounddesc': "potion description on the ground",
                          'descwords': ['potion']
                          },
               "stone": {'grounddesc': "stone description on the ground",
-                         'shortdesc': "stone short description",
-                         'longdesc': "stone long description",
-                         'takeable': True,
-                         'edible': False,
-                         'value': 0,
-                         'descwords': ['stone', 'rock']
-                         },
-              "gold": {'grounddesc': "gold description on the ground",
-                        'shortdesc': "gold short description",
-                        'longdesc': "gold long description",
-                        'takeable': True, 
-                        'descwords': ['gold', 'coin'],
-                        'value': 1,
+                        'shortdesc': "stone short description",
+                        'longdesc': "stone long description",
+                        'takeable': True,
+                        'edible': False,
+                        'value': 0,
+                        'descwords': ['stone', 'rock']
                         },
-			 "shield": {'grounddesc': "shield ground description.", 
-			            'shortdesc': "shield short description",
-						'longdesc': "shield long description", 
-						'descwords': ['shield'],
-						'takeable': True,
-                        'type': 'armour',
-						'slot': ['lhand'],
-						'value': 5, 
-						'bonus': 2},
-			 "sword": {'grounddesc': "sword ground description.", 
-			            'shortdesc': "sword short description",
-						'longdesc': "sword long description",
-                        'descwords': ['sword'],						
-						'takeable': True,
-						'type': 'weapon',
-						'slot': ['rhand'], 
-						'value': 3, 
-						'bonus': 1},
-}
+              "gold": {'grounddesc': "gold description on the ground",
+                       'shortdesc': "gold short description",
+                       'longdesc': "gold long description",
+                       'takeable': True,
+                       'descwords': ['gold', 'coin'],
+                       'value': 1,
+                       },
+              "shield": {'grounddesc': "shield ground description.",
+                         'shortdesc': "shield short description",
+                         'longdesc': "shield long description",
+                         'descwords': ['shield'],
+                         'takeable': True,
+                         'type': 'armour',
+                         'slot': ['lhand'],
+                         'value': 5,
+                         'bonus': 2},
+              "sword": {'grounddesc': "sword ground description.",
+                        'shortdesc': "sword short description",
+                        'longdesc': "sword long description",
+                        'descwords': ['sword'],
+                        'takeable': True,
+                        'type': 'weapon',
+                        'slot': ['rhand'],
+                        'value': 3,
+                        'bonus': 1},
+              }
 
 worldNpcs = {'greg': {'name': "Greg",
                       'type': "shopkeeper",
                       'shortdesc': "Greg short description.",
                       'longdesc': "Greg long description"},
 
-}
+             }
 
-worldMonsters = {'orc': {'name': "orc", 
+worldMonsters = {'orc': {'name': "orc",
                          'desc': "orc description",
                          'stats': {'xp': 1, 'hp': 1, 'str': 2, 'dex': 4, 'con': 5},
-						 'attack': 3,
-						 'defense': 3,
-						 },
-			     'troll': {'name': "troll", 
-                         'desc': "Troll description",
-                         'stats': {'xp': 1, 'hp': 4, 'str': 2, 'dex': 4, 'con': 5},
-						 'attack': 5,
-						 'defense': 5,
-						 },
-				} 
+                         'attack': 3,
+                         'defense': 3,
+                         },
+                 'troll': {'name': "troll",
+                           'desc': "Troll description",
+                           'stats': {'xp': 1, 'hp': 4, 'str': 2, 'dex': 4, 'con': 5},
+                           'attack': 5,
+                           'defense': 5,
+                           },
+                 }
 
 player = {'name': "player",
           'location': "v1",
-          'inv':  ['stone', 'sword', 'shield', 'gold', 'gold'],
-		  'stats': {'str': 1, 'dex': 2, 'con': 4, 'max_hp': 5, 'hp': 5, 'xp': 6},
-		  'slots': {'rhand': None,
-		            'lhand': None,
-					'head': None,
-					'body': None,
-					'feet': None},
-		 'attack': 4,
-		 'defense': 6, 
-		  
-}
+          'inv': ['stone', 'sword', 'shield', 'gold', 'gold'],
+          'stats': {'str': 1, 'dex': 2, 'con': 4, 'max_hp': 5, 'hp': 5, 'xp': 6},
+          'slots': {'rhand': None,
+                    'lhand': None,
+                    'head': None,
+                    'body': None,
+                    'feet': None},
+          'attack': 4,
+          'defense': 6,
 
-NAME = 'name'
-DESC = 'desc'
-NORTH = 'north'
-SOUTH = 'south'
-EAST = 'east'
-WEST = 'west'
-UP = 'up'
-DOWN = 'down'
-GROUND = 'ground'
-SHOP = 'shop'
-GROUNDDESC = 'grounddesc'
-SHORTDESC = 'shortdesc'
-LONGDESC = 'longdesc'
-TAKEABLE = 'takeable'
-EDIBLE = 'edible'
-DESCWORDS = 'descwords'
+          }
 
-COMBAT = False
-location = "v1"
-showFullExits = True
-combatants = {}
 
 class Combat(object):
 
@@ -154,7 +139,7 @@ class Combat(object):
         os.system('cls')
         print("You are engage in combat")
         print("Opponents:")
-        self.create_combatant_list(location)
+        self.combatant_dict(location)
         monsters = combatants
         print("+++++++++")
         print(monsters)
@@ -163,7 +148,7 @@ class Combat(object):
         #     # print("{0} hp: {1}".format(combatants[v]['name'], worldMonsters[v]['stats']['hp']))
         # print("{0} hp: {1}\n".format(player['name'], player['stats']['hp']))
 
-    def create_combatant_list(self, loc):
+    def combatant_dict(self, loc):
         global combatants
         monsters = worldRooms[loc]['monsters']
         for idx, val in enumerate(monsters):
@@ -171,8 +156,6 @@ class Combat(object):
             x = [idx]
             combatants = dict(zip(x, base_monster))
             # return combatants
-
-
 
     def player_turn(self, monster):
         player_attack = player['attack']
@@ -281,11 +264,14 @@ class PrintText(object):
         print('\n'.join(textwrap.wrap(worldRooms[loc]['desc'], SCREEN_WIDTH)))
 
     def display_items_at_location(self, loc):
-        if len(worldRooms[loc]['ground']) > 0:
-            for i in worldRooms[loc]['ground']:
-                print("=" * len(worldRooms[loc]['name']))
-                print("Items on the ground:")
+        items = worldRooms[loc]['ground']
+        if len(items) > 0:
+            print("=" * len(worldRooms[loc]['name']))
+            print("Items on the ground:")
+            for i in items:
                 print(worldItems[i]['grounddesc'])
+        else:
+            print("\nYou see nothing else of interest.")
 
     def display_npc_name(self, loc):
         if len(worldRooms[loc]['npcs']) > 0:
@@ -321,10 +307,10 @@ def move_direction(direction):
 
 
 def get_all_desc_words(item_list):
-    desc_words = []
+    desc_words = sorted([])
     for i in item_list:
         desc_words.extend(worldItems[i]['descwords'])
-    return list(set(desc_words))
+    return sorted(list(set(desc_words)))
 
 
 def get_all_first_desc_words(item_list):

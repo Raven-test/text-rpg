@@ -1,0 +1,24 @@
+world:
+* village
+* forest
+* swamp
+* old castle
+* caves
+
+
+Village:
+* main square V1
+* smithy
+* apothecary
+* healer
+* general store
+* inn
+* dark alley
+
+Forest:
+Swamp: 
+
+
+
+			V2
+			V1

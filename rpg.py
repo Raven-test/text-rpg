@@ -282,9 +282,9 @@ class PrintText(object):
 
     def display_items_at_location(self, loc):
         if len(worldRooms[loc]['ground']) > 0:
+            print("=" * len(worldRooms[loc]['name']))
+            print("Items on the ground:")
             for i in worldRooms[loc]['ground']:
-                print("=" * len(worldRooms[loc]['name']))
-                print("Items on the ground:")
                 print(worldItems[i]['grounddesc'])
 
     def display_npc_name(self, loc):

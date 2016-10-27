@@ -30,14 +30,30 @@ rooms = {'v1': {'name': "Main square",
                       'ground': ['stone', 'gold'],
                       'npcs': [],
                       'monsters': ["orc", "troll"],
-                      'n': "v2"},
-              'v2': {'name': "Apothecary",
+                      'n': "v2",
+                      "e": "v3",
+                      "w": "v4"},
+         'v2': {'name': "Apothecary",
                       'desc': "Description of the Apothecary",
                       'ground': [],
                       'npcs': ['greg'],
                       'monsters': ["orc", "orc", "troll"],
                       'shop': ['potion'],
-                      's': "v1"}
+                      's': "v1"},
+         'v3': {'name': "Sandbox",
+                'desc': "Here anything can happen for testing purposes.",
+                'ground': [],
+                'npcs': ['greg'],
+                'monsters': ["orc"],
+                'shop': [],
+                'w': "v1"},
+         'v4': {'name': "Blacksmith",
+                'desc': "The place for adventuring equipment",
+                'ground': [],
+                'npcs': ['greg'],
+                'monsters': ["orc"],
+                'shop': ["sword"],
+                'e': "v1"},
          }
 
 items = {"potion": {'grounddesc': "potion description on the ground",
@@ -263,11 +279,11 @@ class PrintText(object):
                 exits.append(direction.title())
 
         if showFullExits:
+            print("=" * len(rooms[loc]['name']))
+            print("Dirctions:")
             for direction in ('n', 's', 'e', 'w', 'u', 'd'):
                 if direction in rooms[loc]:
                     exit_name = rooms[loc][direction]
-                    print("=" * len(rooms[loc]['name']))
-                    print("Dirctions:")
                     print("%s: %s" % (direction.title(), rooms[exit_name]['name']))
         else:
             print("=" * len(rooms[loc]['name']))

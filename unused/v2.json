@@ -1,0 +1,4 @@
+{ "name": "Apothecary",
+  "desc": "Description of the Apothecary",
+  "neighbors": {"s": 1}
+}

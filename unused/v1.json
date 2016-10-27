@@ -1,0 +1,5 @@
+{ "name": "Main square",
+  "desc": "look description of main square. This is more or less the center of the village. This is just some text to test the textwrap functionality for the description of locations. The text cannot be on a second line in the dictionary. I wonder if this will all look rather ok in the command line.",
+  "ground": ["gold", "stone"],
+  "neighbors": {"n": 2}
+}

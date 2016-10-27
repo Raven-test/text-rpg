@@ -1,10 +1,8 @@
 #!python3
 
 import cmd
-import sys
 import os
 import textwrap
-import itertools
 
 # http://inventwithpython.com/blog/2014/12/11/making-a-text-adventure-game-with-the-cmd-and-textwrap-python-modules/
 
@@ -26,7 +24,7 @@ import itertools
 
 SCREEN_WIDTH = 80
 
-worldRooms = {'v1': {'name': "Main square",
+rooms = {'v1': {'name': "Main square",
                       'initial_desc': "initial description of main square",
                       'desc': "look description of main square. This is more or less the center of the village. This is just some text to test the textwrap functionality for the description of locations. The text cannot be on a second line in the dictionary. I wonder if this will all look rather ok in the command line.",
                       'ground': ['stone', 'gold'],
@@ -42,7 +40,7 @@ worldRooms = {'v1': {'name': "Main square",
                       's': "v1"}
          }
 
-worldItems = {"potion": {'grounddesc': "potion description on the ground",
+items = {"potion": {'grounddesc': "potion description on the ground",
                          'shortdesc': "potion short description",
                          'longdesc': "potion long description",
                          'takeable': True,
@@ -85,14 +83,14 @@ worldItems = {"potion": {'grounddesc': "potion description on the ground",
 						'bonus': 1},
 }
 
-worldNpcs = {'greg': {'name': "Greg",
+npcs = {'greg': {'name': "Greg",
                       'type': "shopkeeper",
                       'shortdesc': "Greg short description.",
                       'longdesc': "Greg long description"},
 
 }
 
-worldMonsters = {'orc': {'name': "orc", 
+monsters = {'orc': {'name': "orc", 
                          'desc': "orc description",
                          'stats': {'xp': 1, 'hp': 1, 'str': 2, 'dex': 4, 'con': 5},
 						 'attack': 3,
@@ -142,6 +140,7 @@ location = "v1"
 showFullExits = True
 combatants = {}
 
+
 class Combat(object):
 
     global COMBAT
@@ -160,32 +159,30 @@ class Combat(object):
         print(monsters)
         # for k, v in monsters:
         #     pass
-        #     # print("{0} hp: {1}".format(combatants[v]['name'], worldMonsters[v]['stats']['hp']))
+        #     # print("{0} hp: {1}".format(combatants[v]['name'], monsters[v]['stats']['hp']))
         # print("{0} hp: {1}\n".format(player['name'], player['stats']['hp']))
 
     def create_combatant_list(self, loc):
         global combatants
-        monsters = worldRooms[loc]['monsters']
+        monsters = rooms[loc]['monsters']
         for idx, val in enumerate(monsters):
-            base_monster = [worldMonsters[val]]
+            base_monster = [monsters[val]]
             x = [idx]
             combatants = dict(zip(x, base_monster))
             # return combatants
-
-
 
     def player_turn(self, monster):
         player_attack = player['attack']
         player_hp = player['stats']['hp']
 
     def monster_turn(self, monster):
-        monster_attack = worldMonsters[monster]['attack']
+        monster_attack = monsters[monster]['attack']
         player_defense = player['defense']
 
     def combat_round(self, monster):   
-        if len(worldRooms[location]['monsters']) > 0:
+        if len(rooms[location]['monsters']) > 0:
             self.player_turn(monster)
-            for monster, v in worldRooms[location]['monsters'].items():
+            for monster, v in rooms[location]['monsters'].items():
                 os.system('pause')
                 self.monster_turn(monster)
         else:
@@ -250,7 +247,7 @@ class PrintText(object):
         # self.display_monsters_at_location(loc)
 
     def display_location_name(self, loc):
-        location_name = worldRooms[loc]['name']
+        location_name = rooms[loc]['name']
         try:
             value = location_name
             print(location_name)
@@ -262,43 +259,43 @@ class PrintText(object):
     def display_exits(self, loc):
         exits = []
         for direction in ('n', 's', 'e', 'w', 'u', 'd'):
-            if direction in worldRooms[loc].keys():
+            if direction in rooms[loc].keys():
                 exits.append(direction.title())
 
         if showFullExits:
             for direction in ('n', 's', 'e', 'w', 'u', 'd'):
-                if direction in worldRooms[loc]:
-                    exit_name = worldRooms[loc][direction]
-                    print("=" * len(worldRooms[loc]['name']))
+                if direction in rooms[loc]:
+                    exit_name = rooms[loc][direction]
+                    print("=" * len(rooms[loc]['name']))
                     print("Dirctions:")
-                    print("%s: %s" % (direction.title(), worldRooms[exit_name]['name']))
+                    print("%s: %s" % (direction.title(), rooms[exit_name]['name']))
         else:
-            print("=" * len(worldRooms[loc]['name']))
+            print("=" * len(rooms[loc]['name']))
             print("exits: %s" % ' '.join(exits))
 
     def display_location_description(self, loc):
 
-        print('\n'.join(textwrap.wrap(worldRooms[loc]['desc'], SCREEN_WIDTH)))
+        print('\n'.join(textwrap.wrap(rooms[loc]['desc'], SCREEN_WIDTH)))
 
     def display_items_at_location(self, loc):
-        if len(worldRooms[loc]['ground']) > 0:
-            print("=" * len(worldRooms[loc]['name']))
+        if len(rooms[loc]['ground']) > 0:
+            print("=" * len(rooms[loc]['name']))
             print("Items on the ground:")
-            for i in worldRooms[loc]['ground']:
-                print(worldItems[i]['grounddesc'])
+            for i in rooms[loc]['ground']:
+                print(items[i]['grounddesc'])
 
     def display_npc_name(self, loc):
-        if len(worldRooms[loc]['npcs']) > 0:
-            print("=" * len(worldRooms[loc]['name']))
+        if len(rooms[loc]['npcs']) > 0:
+            print("=" * len(rooms[loc]['name']))
             print("Persons of interest:")
-            npc_list = worldRooms[loc]['npcs']
-            for i in worldRooms[loc]['npcs']:
-                name = worldNpcs[i]['name']
-                type = worldNpcs[i]['type']
+            npc_list = rooms[loc]['npcs']
+            for i in rooms[loc]['npcs']:
+                name = npcs[i]['name']
+                type = npcs[i]['type']
                 print(name + ": " + type)
 
     def display_monsters_at_location(self, loc):
-        location_monsters = worldRooms[loc]['monsters']
+        location_monsters = rooms[loc]['monsters']
         if len(location_monsters) > 0:
             print("Monsters:")
             for m in location_monsters:
@@ -311,8 +308,8 @@ def move_direction(direction):
     global location
     menu = PrintText()
 
-    if direction in worldRooms[location]:
-        location = worldRooms[location][direction]
+    if direction in rooms[location]:
+        location = rooms[location][direction]
         os.system('cls')
         menu.display_location(location)
         player['location'] = location
@@ -323,7 +320,7 @@ def move_direction(direction):
 def get_all_desc_words(item_list):
     desc_words = []
     for i in item_list:
-        desc_words.extend(worldItems[i]['descwords'])
+        desc_words.extend(items[i]['descwords'])
     return list(set(desc_words))
 
 
@@ -332,14 +329,14 @@ def get_all_first_desc_words(item_list):
     desc_words = []
 
     for i in item_list:
-        desc_words.append(worldItems[i]['descwords'][0])
+        desc_words.append(items[i]['descwords'][0])
     return sorted(list(set(desc_words)))
 
 
 def get_first_item_matching_desc(desc, item_list):
     item_list = list(set(item_list))
     for i in item_list:
-        if desc in worldItems[i]['descwords']:
+        if desc in items[i]['descwords']:
             return i
     return None
 
@@ -348,7 +345,7 @@ def get_all_items_matching_desc(desc, item_list):
     item_list = list(set(item_list))
     matching_items = []
     for i in item_list:
-        if desc in worldItems[i]['descwords']:
+        if desc in items[i]['descwords']:
             matching_items.append(i)
     return matching_items
 
@@ -429,12 +426,12 @@ class Rpg(cmd.Cmd):
             return
 
         cant_take = False
-        for i in get_all_items_matching_desc(item_to_take, worldRooms[location]['ground']):
-            if worldItems[i].get('takeable', True) == False:
+        for i in get_all_items_matching_desc(item_to_take, rooms[location]['ground']):
+            if items[i].get('takeable', True) == False:
                 cant_take = True
                 continue
-            print("you take %s" % worldItems[i]['shortdesc'])
-            worldRooms[location]['ground'].remove(i)
+            print("you take %s" % items[i]['shortdesc'])
+            rooms[location]['ground'].remove(i)
             player['inv'].append(i)
             return
 
@@ -455,9 +452,9 @@ class Rpg(cmd.Cmd):
 
         item = get_first_item_matching_desc(item_to_drop, player['inv'])
         if item is not None:
-            print("You drop %s" % worldItems[item]['shortdesc'])
+            print("You drop %s" % items[item]['shortdesc'])
             player['inv'].remove(item)
-            worldRooms[location]['ground'].append(item)
+            rooms[location]['ground'].append(item)
 
     def do_look(self, arg):
         """Look at an item, direction, or the area:
@@ -475,65 +472,65 @@ class Rpg(cmd.Cmd):
 
         if looking_at == 'exits':
             for d in ('n', 's', 'e', 'w', 'u', 'd'):
-                if d in worldRooms['location']:
-                    print("%s: %s" % d.title(), worldRooms[location][d])
+                if d in rooms['location']:
+                    print("%s: %s" % d.title(), rooms[location][d])
             return
 
         if looking_at in ('n', 's', 'e', 'w', 'u', 'd', 'north'):
-            if looking_at.startswith('n') and 'n' in worldRooms[location]:
-                name = worldRooms[location]['n']
-                print(worldRooms[name]['name'])
-            elif looking_at.startswith('s') and 's' in worldRooms[location]:
-                name = worldRooms[location]['s']
-                print(worldRooms[name]['name'])
-            elif looking_at.startswith('e') and 'e' in worldRooms[location]:
-                name = worldRooms[location]['e']
-                print(worldRooms[name]['name'])
-            elif looking_at.startswith('w') and 'w' in worldRooms[location]:
-                name = worldRooms[location]['w']
-                print(worldRooms[name]['name'])
-            elif looking_at.startswith('u') and 'u' in worldRooms[location]:
-                name = worldRooms[location]['u']
-                print(worldRooms[name]['name'])
-            elif looking_at.startswith('d') and 'd' in worldRooms[location]:
-                name = worldRooms[location]['d']
-                print(worldRooms[name]['name'])
+            if looking_at.startswith('n') and 'n' in rooms[location]:
+                name = rooms[location]['n']
+                print(rooms[name]['name'])
+            elif looking_at.startswith('s') and 's' in rooms[location]:
+                name = rooms[location]['s']
+                print(rooms[name]['name'])
+            elif looking_at.startswith('e') and 'e' in rooms[location]:
+                name = rooms[location]['e']
+                print(rooms[name]['name'])
+            elif looking_at.startswith('w') and 'w' in rooms[location]:
+                name = rooms[location]['w']
+                print(rooms[name]['name'])
+            elif looking_at.startswith('u') and 'u' in rooms[location]:
+                name = rooms[location]['u']
+                print(rooms[name]['name'])
+            elif looking_at.startswith('d') and 'd' in rooms[location]:
+                name = rooms[location]['d']
+                print(rooms[name]['name'])
             else:
                 print("There is nothing in that direction.")
             return
 
-        if looking_at in (worldRooms[location]['npcs']):
-            print(worldNpcs[looking_at]['longdesc'])
+        if looking_at in (rooms[location]['npcs']):
+            print(npcs[looking_at]['longdesc'])
             return
 
-        if looking_at in (worldRooms[location]['monsters']):
-            print(worldMonsters[looking_at]['desc'])
+        if looking_at in (rooms[location]['monsters']):
+            print(monsters[looking_at]['desc'])
             return		
 
-        item = get_first_item_matching_desc(looking_at, worldRooms[location]['ground'])
+        item = get_first_item_matching_desc(looking_at, rooms[location]['ground'])
         if item is not None:
-            print("\n". join(textwrap.wrap(worldItems[item]['longdesc'], SCREEN_WIDTH)))
+            print("\n". join(textwrap.wrap(items[item]['longdesc'], SCREEN_WIDTH)))
             return
 
         print("You do not see that nearby.")
 
     def do_list(self, arg):
         """list items for sale at a shop"""
-        if 'shop' not in worldRooms[location]:
+        if 'shop' not in rooms[location]:
             print("This is not a shop")
             return
 
         arg = arg.lower()
         print("For sale:")
-        for i in worldRooms[location]['shop']:
+        for i in rooms[location]['shop']:
             print(" - %s" % i)
             if arg == 'full':
-                print("\n".join(textwrap.wrap(worldItems[i]['longdesc'], SCREEN_WIDTH)))
+                print("\n".join(textwrap.wrap(items[i]['longdesc'], SCREEN_WIDTH)))
 
     def do_buy(self, arg):
         """ buy items"""
 
-        if 'shop' not in worldRooms[location]:
+        if 'shop' not in rooms[location]:
             print("This is not a shop")
             return
         item_to_buy = arg.lower()
@@ -541,12 +538,12 @@ class Rpg(cmd.Cmd):
             print("What would you like to buy?")
             return
 
-        item = get_first_item_matching_desc(item_to_buy, worldRooms[location]['shop'])
-        item_value = worldItems[item]['value']
+        item = get_first_item_matching_desc(item_to_buy, rooms[location]['shop'])
+        item_value = items[item]['value']
         total_wealth = player['inv'].count('gold')
         if item is not None:
             if item_value <= total_wealth:
-                print("You have bought %s" % worldItems[item]['shortdesc'])
+                print("You have bought %s" % items[item]['shortdesc'])
                 player['inv'].append(item)
                 for i in range(item_value):
                     player['inv'].remove('gold')	
@@ -559,7 +556,7 @@ class Rpg(cmd.Cmd):
 
     def do_sell(self, arg):
         """Sell items in a shop"""
-        if 'shop' not in worldRooms[location]:
+        if 'shop' not in rooms[location]:
             print("This is not a shop")
             return
 
@@ -570,11 +567,11 @@ class Rpg(cmd.Cmd):
             return
 
         # item = get_first_item_matching_desc(item_to_sell, player['inv'])
-        item_value = worldItems[item_to_sell]['value']
+        item_value = items[item_to_sell]['value']
           
         for i in player['inv']:
-            if item_to_sell in worldItems[i]['descwords']:
-                print("you have sold %s" % worldItems[i]['shortdesc'])
+            if item_to_sell in items[i]['descwords']:
+                print("you have sold %s" % items[i]['shortdesc'])
                 player['inv'].remove(i)
                 for i in range(item_value):
                     player['inv'].append('gold')
@@ -591,10 +588,10 @@ class Rpg(cmd.Cmd):
         cannot_eat = False
 
         for i in get_all_items_matching_desc(item_to_eat, player['inv']):
-            if worldItems[i].get('edible', False) == False:
+            if items[i].get('edible', False) == False:
                 cannot_eat = True
                 continue
-            print("You eat %s" % (worldItems[i]['shortdesc']))
+            print("You eat %s" % (items[i]['shortdesc']))
             player['inv'].remove(i)
             return
 
@@ -616,16 +613,16 @@ class Rpg(cmd.Cmd):
         item_to_equip = arg.lower()
         if item_to_equip in player['inv']:
             # print(item_to_equip + " is in inventory!")
-            equip_slot = worldItems[item_to_equip]['slot'][0]
+            equip_slot = items[item_to_equip]['slot'][0]
             player['slots'][equip_slot] = item_to_equip
             player['inv'].remove(item_to_equip)
-            if worldItems[item_to_equip]['type'] == 'armour':
+            if items[item_to_equip]['type'] == 'armour':
                 old_defense = player['defense']
-                new_defense = old_defense + worldItems[item_to_equip]['bonus']
+                new_defense = old_defense + items[item_to_equip]['bonus']
                 player['defense'] = new_defense
-            if worldItems[item_to_equip]['type'] == 'weapon':
+            if items[item_to_equip]['type'] == 'weapon':
                 old_attack = player['attack']
-                new_attack = old_attack + worldItems[item_to_equip]['bonus']
+                new_attack = old_attack + items[item_to_equip]['bonus']
                 player['attack'] = new_attack
         else:
             print("You do not have this item to equip.")

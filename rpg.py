@@ -3,174 +3,105 @@
 import cmd
 import os
 import textwrap
+from npcs import npcs
+from rooms import rooms
+from items import items
+from monsters import monsters
+from player import player
+
 
 # http://inventwithpython.com/blog/2014/12/11/making-a-text-adventure-game-with-the-cmd-and-textwrap-python-modules/
 
-# DONE:
-# TODO: create trade system with value for items
+SCREEN_WIDTH = 70
 
-# in progress:
-# TODO: create monsters
-# set global combat = False (make true when in combat)
-
-
-# backlog:
-# TODO: create fighting system
-# TODO: save and load game
-# TODO: conversation options for npcs (talk to)
-# TODO: create containers that can hold items
-# TODO: Create quest system
-# TODO: implement doors (closed and open, lockable)
-
-SCREEN_WIDTH = 80
-
-rooms = {'v1': {'name': "Main square",
-                      'initial_desc': "initial description of main square",
-                      'desc': "look description of main square. This is more or less the center of the village. This is just some text to test the textwrap functionality for the description of locations. The text cannot be on a second line in the dictionary. I wonder if this will all look rather ok in the command line.",
-                      'ground': ['stone', 'gold'],
-                      'npcs': [],
-                      'monsters': ["orc", "troll"],
-                      'n': "v2",
-                      "e": "v3",
-                      "w": "v4"},
-         'v2': {'name': "Apothecary",
-                      'desc': "Description of the Apothecary",
-                      'ground': [],
-                      'npcs': ['greg'],
-                      'monsters': ["orc", "orc", "troll"],
-                      'shop': ['potion'],
-                      's': "v1"},
-         'v3': {'name': "Sandbox",
-                'desc': "Here anything can happen for testing purposes.",
-                'ground': [],
-                'npcs': ['greg'],
-                'monsters': ["orc"],
-                'shop': [],
-                'w': "v1"},
-         'v4': {'name': "Blacksmith",
-                'desc': "The place for adventuring equipment",
-                'ground': [],
-                'npcs': ['greg'],
-                'monsters': ["orc"],
-                'shop': ["sword"],
-                'e': "v1"},
-         }
-
-items = {"potion": {'grounddesc': "potion description on the ground",
-                         'shortdesc': "potion short description",
-                         'longdesc': "potion long description",
-                         'takeable': True,
-                         'edible': True,
-                         'value': 1,
-                         'descwords': ['potion']
-                         },
-              "stone": {'grounddesc': "stone description on the ground",
-                         'shortdesc': "stone short description",
-                         'longdesc': "stone long description",
-                         'takeable': True,
-                         'edible': False,
-                         'value': 0,
-                         'descwords': ['stone', 'rock']
-                         },
-              "gold": {'grounddesc': "gold description on the ground",
-                        'shortdesc': "gold short description",
-                        'longdesc': "gold long description",
-                        'takeable': True, 
-                        'descwords': ['gold', 'coin'],
-                        'value': 1,
-                        },
-			 "shield": {'grounddesc': "shield ground description.", 
-			            'shortdesc': "shield short description",
-						'longdesc': "shield long description", 
-						'descwords': ['shield'],
-						'takeable': True,
-                        'type': 'armour',
-						'slot': ['lhand'],
-						'value': 5, 
-						'bonus': 2},
-			 "sword": {'grounddesc': "sword ground description.", 
-			            'shortdesc': "sword short description",
-						'longdesc': "sword long description",
-                        'descwords': ['sword'],						
-						'takeable': True,
-						'type': 'weapon',
-						'slot': ['rhand'], 
-						'value': 3, 
-						'bonus': 1},
-}
-
-npcs = {'greg': {'name': "Greg",
-                      'type': "shopkeeper",
-                      'shortdesc': "Greg short description.",
-                      'longdesc': "Greg long description"},
-
-}
-
-monsters = {'orc': {'name': "orc", 
-                         'desc': "orc description",
-                         'stats': {'xp': 1, 'hp': 1, 'str': 2, 'dex': 4, 'con': 5},
-						 'attack': 3,
-						 'defense': 3,
-						 },
-			     'troll': {'name': "troll", 
-                         'desc': "Troll description",
-                         'stats': {'xp': 1, 'hp': 4, 'str': 2, 'dex': 4, 'con': 5},
-						 'attack': 5,
-						 'defense': 5,
-						 },
-				} 
-
-player = {'name': "player",
-          'location': "v1",
-          'inv':  ['stone', 'sword', 'shield', 'gold', 'gold'],
-		  'stats': {'str': 1, 'dex': 2, 'con': 4, 'max_hp': 5, 'hp': 5, 'xp': 6},
-		  'slots': {'rhand': None,
-		            'lhand': None,
-					'head': None,
-					'body': None,
-					'feet': None},
-		 'attack': 4,
-		 'defense': 6, 
-		  
-}
-
-NAME = 'name'
-DESC = 'desc'
-NORTH = 'north'
-SOUTH = 'south'
-EAST = 'east'
-WEST = 'west'
-UP = 'up'
-DOWN = 'down'
-GROUND = 'ground'
-SHOP = 'shop'
-GROUNDDESC = 'grounddesc'
-SHORTDESC = 'shortdesc'
-LONGDESC = 'longdesc'
-TAKEABLE = 'takeable'
-EDIBLE = 'edible'
-DESCWORDS = 'descwords'
 
 COMBAT = False
-location = "v1"
 showFullExits = True
-combatants = {}
+
+
+class Location(object):
+
+    def location_name(self, loc):
+        location_name = rooms[loc]['name']
+        return location_name
+
+    def location_description(self, loc):
+        location_description = rooms[loc]['desc']
+        return location_description
+
+    def location_npcs(self, loc):
+        if len(rooms[loc]['npcs']) > 0:
+            npc_list = rooms[loc]['npcs']
+            for i in rooms[loc]['npcs']:
+                npc_name = npcs[i]['name']
+                npc_type = npcs[i]['type']
+                return npc_name, npc_type
+
+    def location_shop(self, loc):
+        if 'shop' in rooms[loc]:
+            if len(rooms[loc]['shop']) > 0:
+                # print("=" * len(rooms[loc]['name']))
+                # print("Items for sale:")
+                for i in rooms[loc]['shop']:
+                    item = i
+                    item_value = items[i]['value']
+                    # print("{0} ({1} gp)".format(i, items[i]['value']))
+                    return item, item_value
+
+    def location_items(self, loc):
+        if len(rooms[loc]['ground']) > 0:
+            item_list = []
+            for i in rooms[loc]['ground']:
+                item_list.append(items[i]['grounddesc'])
+                item = items[i]['grounddesc']
+            return item_list
+
+    def location_monsters(self):
+        loc = player['location']
+        monster_list = []
+        for monster in rooms[loc]['monsters']:
+            monster_list.append(monster)
+        return monster_list
+
+    def location_events(self, loc):
+        if len(rooms[loc]['events']) > 0:
+            event_list = []
+            for e in rooms[loc]['events']:
+                event_list.append(e)
+            return event_list
+
+
+class Monster(object):
+
+    def create_monster(self, monster):
+        self.retrieve_monster_type(monster)
+        self.construct_monster(monster)
+
+    def retrieve_monster_type(self, monster):
+        loc = player['location']
+
+        if monster in rooms[loc]['monsters']:
+            print(monster)
+            monster_type = monster.split()[1]
+            if monster_type in monsters:
+                print(monsters[monster_type]['desc'])
+            else:
+                print("no such monster")
+            return monster_type
+
+    def construct_monster(self, monster):
+        monster_type = self.retrieve_monster_type(monster)
+        print(monster_type)
 
 
 class Combat(object):
 
     global COMBAT
-    global location
-
-    global combatants
 
     def combat_menu(self):
-        global combatants
         os.system('cls')
         print("You are engage in combat")
         print("Opponents:")
-        self.create_combatant_list(location)
-        monsters = combatants
         print("+++++++++")
         print(monsters)
         # for k, v in monsters:
@@ -178,37 +109,42 @@ class Combat(object):
         #     # print("{0} hp: {1}".format(combatants[v]['name'], monsters[v]['stats']['hp']))
         # print("{0} hp: {1}\n".format(player['name'], player['stats']['hp']))
 
-    def create_combatant_list(self, loc):
-        global combatants
-        monsters = rooms[loc]['monsters']
-        for idx, val in enumerate(monsters):
-            base_monster = [monsters[val]]
-            x = [idx]
-            combatants = dict(zip(x, base_monster))
-            # return combatants
+    def prepare_fight(self):
+        global COMBAT
+        COMBAT = True
+        Location().location_name(player['location'])
+        print("You encountered hostile creatures, you are in combat!")
+        monster_list = Location().location_monsters()
+        for monster in monster_list:
+            print(monster)
 
     def player_turn(self, monster):
-        player_attack = player['attack']
-        player_hp = player['stats']['hp']
+        monster_list = Location().location_monsters()
+        print("you Attack: {0}".format(monster))
+        rooms[player['location']]['monsters'].remove(monster)
 
     def monster_turn(self, monster):
-        monster_attack = monsters[monster]['attack']
-        player_defense = player['defense']
+        monster_list = Location().location_monsters()
+        print(monster_list)
+        print("{0} attacks you".format(monster))
 
-    def combat_round(self, monster):   
-        if len(rooms[location]['monsters']) > 0:
-            self.player_turn(monster)
-            for monster, v in rooms[location]['monsters'].items():
+    def combat_round(self, monster):
+        self.player_turn(monster)
+        monster_list = Location().location_monsters()
+        if len(monster_list) > 0:
+            for monster in monster_list:
                 os.system('pause')
                 self.monster_turn(monster)
         else:
-            self.combat_victory()
+            Combat().combat_victory()
 
     def combat_victory(self):
+        global COMBAT
         COMBAT = False
         print("All monsters are dead. Combat is over!")
 
     def player_death(self):
+        global COMBAT
         COMBAT = False
         print("You have died!")
 
@@ -219,6 +155,10 @@ class PlayerOptions(object):
         print("Hello what is your name?")
         name = input('>>')
         player['name'] = name
+
+    def player_name(self):
+        player_name = player['name']
+        return player_name
 
     def display_inventory(self):
         print("+" * 6)
@@ -241,8 +181,17 @@ class PlayerOptions(object):
         for k, v in player['slots'].items():
             print(k, ": ", v)
 
+    def character_overview(self):
+        title = "Character information"
+        print(title)
+        print("+" * len(title))
+        print("name: " + player['name'])
+        self.display_inventory()
+        self.display_stats()
+        self.display_slots()
 
-class PrintText(object):
+
+class Display(object):
 
     def display_welcome(self):
         print("Welcome! ")
@@ -256,21 +205,26 @@ class PrintText(object):
 
     def display_location(self, loc):
         os.system('cls')
-        self.display_location_name(loc)
-        self.display_location_description(loc)
-        self.display_npc_name(loc)
+        location_name = Location().location_name(loc)
+        location_description = Location().location_description(loc)
+        location_npcs = Location().location_npcs(loc)
+        location_shop = Location().location_shop(loc)
+        print(location_name)
+        print("=" * len(location_name))
+        print('\n'.join(textwrap.wrap(location_description, SCREEN_WIDTH)))
+        if location_npcs is not None:
+            print("=" * len(rooms[loc]['name']))
+            print("Persons of interest:")
+            npc_name, npc_type = location_npcs
+            print(npc_name, ":", npc_type)
+
+        if location_shop is not None:
+            item, value = location_shop
+            print("=" * len(location_name))
+            print("Items for sale:")
+            print(item, "(", value, ")")
         self.display_exits(loc)
         # self.display_monsters_at_location(loc)
-
-    def display_location_name(self, loc):
-        location_name = rooms[loc]['name']
-        try:
-            value = location_name
-            print(location_name)
-            print("=" * len(location_name))
-        except KeyError:
-            print("Unnamed location")
-            print("================")
 
     def display_exits(self, loc):
         exits = []
@@ -280,7 +234,7 @@ class PrintText(object):
 
         if showFullExits:
             print("=" * len(rooms[loc]['name']))
-            print("Dirctions:")
+            print("Directions:")
             for direction in ('n', 's', 'e', 'w', 'u', 'd'):
                 if direction in rooms[loc]:
                     exit_name = rooms[loc][direction]
@@ -288,49 +242,6 @@ class PrintText(object):
         else:
             print("=" * len(rooms[loc]['name']))
             print("exits: %s" % ' '.join(exits))
-
-    def display_location_description(self, loc):
-
-        print('\n'.join(textwrap.wrap(rooms[loc]['desc'], SCREEN_WIDTH)))
-
-    def display_items_at_location(self, loc):
-        if len(rooms[loc]['ground']) > 0:
-            print("=" * len(rooms[loc]['name']))
-            print("Items on the ground:")
-            for i in rooms[loc]['ground']:
-                print(items[i]['grounddesc'])
-
-    def display_npc_name(self, loc):
-        if len(rooms[loc]['npcs']) > 0:
-            print("=" * len(rooms[loc]['name']))
-            print("Persons of interest:")
-            npc_list = rooms[loc]['npcs']
-            for i in rooms[loc]['npcs']:
-                name = npcs[i]['name']
-                type = npcs[i]['type']
-                print(name + ": " + type)
-
-    def display_monsters_at_location(self, loc):
-        location_monsters = rooms[loc]['monsters']
-        if len(location_monsters) > 0:
-            print("Monsters:")
-            for m in location_monsters:
-                print(m)
-        else:
-            pass
-
-
-def move_direction(direction):
-    global location
-    menu = PrintText()
-
-    if direction in rooms[location]:
-        location = rooms[location][direction]
-        os.system('cls')
-        menu.display_location(location)
-        player['location'] = location
-    else:
-        print("You cannot go in that direction")
 
 
 def get_all_desc_words(item_list):
@@ -367,14 +278,42 @@ def get_all_items_matching_desc(desc, item_list):
 
 
 class Rpg(cmd.Cmd):
-
     pc = PlayerOptions()
-    text = PrintText()
     prompt = '\n>> '
 
     def default(self, arg):
         # called when no other command works
         print("Unknown command.")
+
+    # def move_direction(self, direction):
+    #     current_location = player['location']
+    #     if direction in rooms[current_location]:
+    #         new_location = rooms[current_location][direction]
+    #         if len(rooms[new_location]['monsters']) > 0:
+    #             player['location'] = new_location
+    #             Combat().prepare_fight()
+    #         else:
+    #             player['location'] = new_location
+    #             os.system('cls')
+    #             Display().display_location(player['location'])
+    #             return player['location']
+    #     else:
+    #         print("You cannot go in that direction")
+
+    def move_direction(self, dir):
+        current_location = player['location']
+        if dir in rooms[current_location]:
+            new_location = rooms[current_location][dir]
+            player['location'] = new_location
+            event_list = Location().location_events(new_location)
+            if event_list is not None:
+                if 'combat' in event_list:
+                    Combat().prepare_fight()
+            else:
+                Display().display_location(player['location'])
+                return player['location']
+        else:
+            print("You cannot go in that direction.")
 
     def do_quit(self, arg):
         """Quit the game"""
@@ -383,34 +322,34 @@ class Rpg(cmd.Cmd):
 
     @staticmethod
     def do_combat(self):
-        global COMBAT
-        combat = Combat()
-        COMBAT = True
-        combat.combat_menu()
+        # global COMBAT
+        # combat = Combat()
+        # COMBAT = True
+        Combat().prepare_fight()
 
     def do_north(self, arg):
         """type 'north' to go north."""
-        move_direction('n')
+        self.move_direction('n')
 
     def do_south(self, arg):
         """"type 'south' to go south."""
-        move_direction('s')
+        self.move_direction('s')
 
     def do_east(self, arg):
         """type 'east' to go east."""
-        move_direction('e')
+        self.move_direction('e')
 
     def do_west(self, arg):
         """type 'west' to go west"""
-        move_direction('w')
+        self.move_direction('w')
 
     def do_up(self, arg):
         """type 'up' to go up."""
-        move_direction('u')
+        self.move_direction('u')
 
     def do_down(self, arg):
         """"type 'down' to go down."""
-        move_direction('d')
+        self.move_direction('d')
 
     def do_inventory(self, arg):
         """Display list of posessions"""
@@ -428,7 +367,7 @@ class Rpg(cmd.Cmd):
         print("Inventory")
         for i in set(player['inv']):
             if item_count[i] > 1:
-                print(" %s (%s)" % (i, item_count[i]))
+                print(" {0} (1)".format(i, item_count[i]))
             else:
                 print(" " + i)
 
@@ -436,18 +375,19 @@ class Rpg(cmd.Cmd):
 
     def do_take(self, arg):
         """take an item on the ground"""
+        loc = player['location']
         item_to_take = arg.lower()
         if item_to_take == '':
             print("Which item? (type look)")
             return
 
         cant_take = False
-        for i in get_all_items_matching_desc(item_to_take, rooms[location]['ground']):
-            if items[i].get('takeable', True) == False:
+        for i in get_all_items_matching_desc(item_to_take, rooms[loc]['ground']):
+            if items[i].get('takeable', True) is False:
                 cant_take = True
                 continue
             print("you take %s" % items[i]['shortdesc'])
-            rooms[location]['ground'].remove(i)
+            rooms[loc]['ground'].remove(i)
             player['inv'].append(i)
             return
 
@@ -458,6 +398,7 @@ class Rpg(cmd.Cmd):
 
     def do_drop(self, arg):
         """drop <item> to the ground"""
+        loc = player['location']
         item_to_drop = arg.lower()
 
         inv_desc_words = get_all_desc_words(player['inv'])
@@ -470,7 +411,7 @@ class Rpg(cmd.Cmd):
         if item is not None:
             print("You drop %s" % items[item]['shortdesc'])
             player['inv'].remove(item)
-            rooms[location]['ground'].append(item)
+            rooms[loc]['ground'].append(item)
 
     def do_look(self, arg):
         """Look at an item, direction, or the area:
@@ -478,52 +419,57 @@ class Rpg(cmd.Cmd):
 "look <direction>" - display the description of the area in that direction
 "look exits" - display the description of all adjacent areas
 "look <item>" - display the description of an item on the ground or in your inventory"""
-
+        loc = player['location']
         looking_at = arg.lower()
         if looking_at == '':
             # os.system('cls')
-            text.display_location(location)
-            text.display_items_at_location(location)
+            Display().display_location(loc)
+            print("=" * len(rooms[loc]['name']))
+            print("Items on the ground:")
+            location_items = Location().location_items(loc)
+            if location_items is not None:
+                for i in location_items:
+                    print(i)
             return
 
         if looking_at == 'exits':
             for d in ('n', 's', 'e', 'w', 'u', 'd'):
                 if d in rooms['location']:
-                    print("%s: %s" % d.title(), rooms[location][d])
+                    print("%s: %s" % d.title(), rooms[loc][d])
             return
 
         if looking_at in ('n', 's', 'e', 'w', 'u', 'd', 'north'):
-            if looking_at.startswith('n') and 'n' in rooms[location]:
-                name = rooms[location]['n']
+            if looking_at.startswith('n') and 'n' in rooms[loc]:
+                name = rooms[loc]['n']
                 print(rooms[name]['name'])
-            elif looking_at.startswith('s') and 's' in rooms[location]:
-                name = rooms[location]['s']
+            elif looking_at.startswith('s') and 's' in rooms[loc]:
+                name = rooms[loc]['s']
                 print(rooms[name]['name'])
-            elif looking_at.startswith('e') and 'e' in rooms[location]:
-                name = rooms[location]['e']
+            elif looking_at.startswith('e') and 'e' in rooms[loc]:
+                name = rooms[loc]['e']
                 print(rooms[name]['name'])
-            elif looking_at.startswith('w') and 'w' in rooms[location]:
-                name = rooms[location]['w']
+            elif looking_at.startswith('w') and 'w' in rooms[loc]:
+                name = rooms[loc]['w']
                 print(rooms[name]['name'])
-            elif looking_at.startswith('u') and 'u' in rooms[location]:
-                name = rooms[location]['u']
+            elif looking_at.startswith('u') and 'u' in rooms[loc]:
+                name = rooms[loc]['u']
                 print(rooms[name]['name'])
-            elif looking_at.startswith('d') and 'd' in rooms[location]:
-                name = rooms[location]['d']
+            elif looking_at.startswith('d') and 'd' in rooms[loc]:
+                name = rooms[loc]['d']
                 print(rooms[name]['name'])
             else:
                 print("There is nothing in that direction.")
             return
 
-        if looking_at in (rooms[location]['npcs']):
+        if looking_at in (rooms[loc]['npcs']):
             print(npcs[looking_at]['longdesc'])
             return
 
-        if looking_at in (rooms[location]['monsters']):
+        if looking_at in (rooms[loc]['monsters']):
             print(monsters[looking_at]['desc'])
             return		
 
-        item = get_first_item_matching_desc(looking_at, rooms[location]['ground'])
+        item = get_first_item_matching_desc(looking_at, rooms[loc]['ground'])
         if item is not None:
             print("\n". join(textwrap.wrap(items[item]['longdesc'], SCREEN_WIDTH)))
             return
@@ -532,21 +478,22 @@ class Rpg(cmd.Cmd):
 
     def do_list(self, arg):
         """list items for sale at a shop"""
-        if 'shop' not in rooms[location]:
+        loc = player['location']
+        if 'shop' not in rooms[loc]:
             print("This is not a shop")
             return
 
         arg = arg.lower()
         print("For sale:")
-        for i in rooms[location]['shop']:
+        for i in rooms[loc]['shop']:
             print(" - %s" % i)
             if arg == 'full':
                 print("\n".join(textwrap.wrap(items[i]['longdesc'], SCREEN_WIDTH)))
 
     def do_buy(self, arg):
         """ buy items"""
-
-        if 'shop' not in rooms[location]:
+        loc = player['location']
+        if 'shop' not in rooms[loc]:
             print("This is not a shop")
             return
         item_to_buy = arg.lower()
@@ -554,10 +501,10 @@ class Rpg(cmd.Cmd):
             print("What would you like to buy?")
             return
 
-        item = get_first_item_matching_desc(item_to_buy, rooms[location]['shop'])
-        item_value = items[item]['value']
+        item = get_first_item_matching_desc(item_to_buy, rooms[loc]['shop'])
         total_wealth = player['inv'].count('gold')
         if item is not None:
+            item_value = items[item]['value']
             if item_value <= total_wealth:
                 print("You have bought %s" % items[item]['shortdesc'])
                 player['inv'].append(item)
@@ -567,12 +514,13 @@ class Rpg(cmd.Cmd):
             else:
                 print("You do not have enough gold to buy that.")
                 return
-
-        print("%s is not sold here." % item_to_buy)
+        else:
+            print("{0} is not sold here.".format(item_to_buy))
 
     def do_sell(self, arg):
         """Sell items in a shop"""
-        if 'shop' not in rooms[location]:
+        loc = player['location']
+        if 'shop' not in rooms[loc]:
             print("This is not a shop")
             return
 
@@ -645,27 +593,24 @@ class Rpg(cmd.Cmd):
 
     def do_attack(self, arg):
         """attack <monster>"""
-        combat = Combat()
         monster_to_attack = arg.lower()
-        if COMBAT: 
-#            combat.player_turn(monster_to_attack)
-#            os.system('pause')
-#            combat.monster_turn(monster_to_attack)
-            combat.combat_round(monster_to_attack)
+        loc = player['location']
+        if COMBAT:
+            monster_list = Location().location_monsters()
+            # if monster_to_attack in rooms[loc]['monsters']:
+            if len(monster_list) > 0:
+                if monster_to_attack in monster_list:
+                    Combat().combat_round(monster_to_attack)
+                else:
+                    print("There is no monster like that in this fight.")
+            else:
+                Combat().combat_victory()
         else: 
             print("You cannot perform this action when not in combat mode.")		
 
-
     def do_char(self, arg):
         """character information"""
-        pc = PlayerOptions()
-        title = "Character information"
-        print(title)
-        print("+" * len(title))
-        print("name: " + player['name'])
-        pc.display_inventory()
-        pc.display_stats()
-        pc.display_slots()
+        PlayerOptions().character_overview()
 
     do_n = do_north
     do_s = do_south
@@ -677,11 +622,12 @@ class Rpg(cmd.Cmd):
 
 
 if __name__ == '__main__':
+    location = player['location']
     os.system('cls')
-    text = PrintText()
+#    text = Display()
     pc = PlayerOptions()
     # pc.create_character()
     # text.display_welcome()
     # text.start_story()
-    text.display_location(location)
+    Display().display_location(location)
     Rpg().cmdloop()

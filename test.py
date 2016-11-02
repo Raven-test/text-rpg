@@ -19,5 +19,6 @@ class TestTest(unittest.TestCase):
         expected_desc_words = ['coin', 'gold']
         self.assertEqual(get_all_desc_words(expected_item_list), expected_desc_words)
 
+
 if __name__ == "__main":
     unittest.main()

@@ -1,0 +1,13 @@
+monsters = {'orc': {'name': "orc",
+                         'desc': "orc description",
+                         'stats': {'xp': 1, 'hp': 1, 'str': 2, 'dex': 4, 'con': 5},
+						 'attack': 3,
+						 'defense': 3,
+						 },
+			     'troll': {'name': "troll",
+                         'desc': "Troll description",
+                         'stats': {'xp': 1, 'hp': 4, 'str': 2, 'dex': 4, 'con': 5},
+						 'attack': 5,
+						 'defense': 5,
+						 },
+				}

@@ -7,9 +7,13 @@ world:
 
 
 Village:
-* main square V1
-* smithy
-* apothecary
+* v1 - main square
+* v6 - north street
+* v7 - west street
+* v5 - gate street
+* gate
+* v4 - smithy
+* v2 - apothecary
 * healer
 * general store
 * inn
@@ -18,7 +22,13 @@ Village:
 Forest:
 Swamp: 
 
+            N
+          W   E
+            S
 
 
-			V2
-			V1
+		v4 - v6 - v2
+		     |
+		v7 - v1 - v3
+		     |
+		     v5

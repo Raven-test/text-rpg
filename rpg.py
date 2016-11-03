@@ -435,7 +435,7 @@ class Rpg(cmd.Cmd):
 
     def move_direction(self, direction):
         current_location = player['location']
-        if dir in rooms[current_location]:
+        if direction in rooms[current_location]:
             new_location = rooms[current_location][direction]
             player['location'] = new_location
             event_list = Location().location_events(new_location)
